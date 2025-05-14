@@ -1,5 +1,7 @@
 package elements
 
+import templates.Templates
+
 interface ClassElement
 
 data class Class(
@@ -15,13 +17,13 @@ data class Class(
 
     override fun autocomplete() {
         if (name == null) {
-            name = names.random().apply { this[0].uppercase() }
+            name = Templates.classNames.random()
         }
     }
 
     override fun toStringArray(): List<String> {
         val result = mutableListOf<String>()
-        result.add("class ${name!!} ${parent?.let { " : ${it.name}" }}")
+        result.add("class ${name!!} ${parent?.let { " : ${it.name}" } ?: ""}")
         result.add("{")
         publicElements?.let {
             result.add("public:")

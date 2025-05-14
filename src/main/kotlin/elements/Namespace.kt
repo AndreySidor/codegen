@@ -1,5 +1,7 @@
 package elements
 
+import templates.Templates
+
 interface SpaceElement
 
 data class Namespace(
@@ -12,7 +14,7 @@ data class Namespace(
 
     override fun autocomplete() {
         if (name == null) {
-            name = names.random().apply { this[0].uppercase() }
+            name = Templates.namespaceNames.random()
         }
     }
 

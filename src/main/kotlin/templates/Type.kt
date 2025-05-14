@@ -1,31 +1,7 @@
-package elements
+package templates
 
 import randomString
 import kotlin.random.Random
-
-val statements = listOf(
-    "true",
-    "false",
-    "5 < 10",
-    "int a = 0",
-    "float test = 1.1"
-)
-
-val forStatements = listOf(
-    "int i = 0; ${statements.random()}; i++",
-    "int j = 10; ${statements.random()}; j--",
-    "int i = 10; i >= 0; i--",
-    "int j = 0; j < 10; j++",
-    "int j = 0; j <= 10; j++"
-)
-
-val names = listOf(
-    "i", "j", "some", "nothing", "f"
-)
-
-val functionNames = listOf(
-    "do", "run", "close", "dest", "read"
-)
 
 enum class Type(val value : String) {
     CONST_CHAR_POINTER("const char*"),

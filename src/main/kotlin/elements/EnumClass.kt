@@ -1,6 +1,8 @@
 package elements
 
-data class Enum(
+import templates.Templates
+
+data class EnumClass(
     var name : String? = null,
     val elements : List<Declaration.EnumConstant>? = null
 ) : MultiLine, SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete {
@@ -10,7 +12,7 @@ data class Enum(
 
     override fun autocomplete() {
         if (name == null) {
-            name = names.random().apply { this[0].uppercase() }
+            name = Templates.enumNames.random()
         }
     }
 

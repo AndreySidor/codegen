@@ -1,5 +1,9 @@
 package elements
 
+import templates.Templates
+import templates.Type
+import templates.getValueBy
+
 data class Function(
     val isStatic : Boolean = false,
     var returnType : Type? = null,
@@ -16,7 +20,7 @@ data class Function(
             returnType = Type.getRandom()
         }
         if (name == null) {
-            name = functionNames.random()
+            name = Templates.functionNames.random()
         }
     }
 
@@ -25,7 +29,7 @@ data class Function(
         result.add("${if (isStatic) "static " else ""}${returnType!!.value} ${name!!}(${
             params?.joinToString(", ") { 
                 it.toString()
-            }
+            } ?: ""
         })")
         result.addAll(body?.toStringArray() ?: Body.empty())
         result.add(result.size - 1, "return ${getValueBy(returnType!!)};")

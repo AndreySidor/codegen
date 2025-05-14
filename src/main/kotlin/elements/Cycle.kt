@@ -1,5 +1,7 @@
 package elements
 
+import templates.Templates.forStatements
+import templates.Templates.statements
 import kotlin.random.Random
 
 data class Cycle(

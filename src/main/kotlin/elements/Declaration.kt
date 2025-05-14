@@ -1,5 +1,9 @@
 package elements
 
+import templates.Templates
+import templates.Type
+import templates.getValueBy
+
 sealed class Declaration : SingleLine, WithRandomAutocomplete {
 
     data class Variable(
@@ -19,7 +23,7 @@ sealed class Declaration : SingleLine, WithRandomAutocomplete {
                 type = Type.getRandom()
             }
             if (name == null) {
-                name = names.random()
+                name = Templates.variableNames.random()
             }
             if (isDefinition && definition == null) {
                 definition = getValueBy(type!!)
@@ -43,7 +47,7 @@ sealed class Declaration : SingleLine, WithRandomAutocomplete {
 
         override fun autocomplete() {
             if (name == null) {
-                name = names.random()
+                name = Templates.enumConstantNames.random()
             }
         }
 
@@ -66,7 +70,7 @@ sealed class Declaration : SingleLine, WithRandomAutocomplete {
                 type = Type.getRandom()
             }
             if (name == null) {
-                name = names.random()
+                name = Templates.variableNames.random()
             }
         }
 
