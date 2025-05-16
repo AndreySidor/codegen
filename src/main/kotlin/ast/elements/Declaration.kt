@@ -5,7 +5,6 @@ import ast.SingleLine
 import ast.WithRandomAutocomplete
 import templates.Templates
 import templates.Type
-import templates.getValueBy
 
 /**
  * Элемент объявления переменной, поля класса, элемента перечисления, параметра функции или метода
@@ -36,7 +35,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
         override fun autocomplete() {
             // Тип
             if (type.isEmpty()) {
-                type = Type.getRandom().value
+                type = Type.random().value
             }
 
             // Имя
@@ -46,7 +45,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
 
             // Определение
             if (isDefinition && definition == null) {
-                definition = getValueBy(Type.getBy(type))
+                definition = Type.by(type).definition()
             }
         }
 
@@ -102,7 +101,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
         override fun autocomplete() {
             // Тип
             if (type.isEmpty()) {
-                type = Type.getRandom().value
+                type = Type.random().value
             }
 
             // Имя

@@ -1,6 +1,14 @@
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import kotlin.random.Random
 
+/**
+ * Генерация рандомной строки заданной длинны
+ * @param length длинна
+ */
 fun randomString(length: Int): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     return (1..length)
@@ -8,6 +16,10 @@ fun randomString(length: Int): String {
         .joinToString("")
 }
 
+/**
+ * Форматирование кода с помощью clang-format, стили: LLVM, Google, Chromium, Mozilla, WebKit, Microsoft, GNU
+ * @param code код в строковом представлении
+ */
 fun formatCodeWithClangFormat(code: String): String? {
     return try {
         val name = randomString(16)
@@ -26,4 +38,16 @@ fun formatCodeWithClangFormat(code: String): String? {
         e.printStackTrace()
         null
     }
+}
+
+/**
+ * Парсинг json списка со строками
+ * @param jsonStr json
+ * @param fieldName имя поля
+ */
+fun parseStringList(jsonStr: String, fieldName: String): List<String> {
+    return Json.parseToJsonElement(jsonStr)
+        .jsonObject[fieldName]!!
+        .jsonArray
+        .map { it.jsonPrimitive.content }
 }

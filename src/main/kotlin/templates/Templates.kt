@@ -1,45 +1,45 @@
 package templates
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import parseStringList
 import java.io.File
 
+/**
+ * Шаблоны для автозаполнения ключевых полей в элементах AST
+ */
 object Templates {
+    // ------------------------------------ Пути к данным в форматах json ----------------------------------------
     private const val variableNamesPath = "templates_data/variables.json"
     private const val enumConstantNamesPath = "templates_data/constants_enum.json"
     private const val functionNamesPath = "templates_data/functions.json"
     private const val enumNamesPath = "templates_data/enums.json"
     private const val classNamesPath = "templates_data/classes.json"
     private const val namespaceNamesPath = "templates_data/namespaces.json"
+    private const val statementsPath = "templates_data/if_statements.json"
+    private const val forStatementsPath = "templates_data/for_statements.json"
 
+    // ----------------------------- Списки, куда сохраняются загруженные шаблоны ---------------------------------
     lateinit var variableNames : List<String>
     lateinit var enumConstantNames : List<String>
     lateinit var functionNames : List<String>
     lateinit var enumNames : List<String>
     lateinit var classNames : List<String>
     lateinit var namespaceNames : List<String>
+    lateinit var statements : List<String>
+    lateinit var forStatements : List<String>
 
-    val statements = listOf(
-        "true",
-        "false",
-        "5 < 10",
-        "int a = 0",
-        "float test = 1.1"
-    )
-
-    val forStatements = listOf(
-        "int i = 0; ${statements.random()}; i++",
-        "int j = 10; ${statements.random()}; j--",
-        "int i = 10; i >= 0; i--",
-        "int j = 0; j < 10; j++",
-        "int j = 0; j <= 10; j++"
-    )
-
-    private val json = Json { ignoreUnknownKeys }
+    /**
+     * Ключ поля списка в json
+     */
     private const val key = "names"
 
+    /**
+     * Предзагрузка шаблонных данных для автозаполнения полей элементов из json
+     *
+     * !!!Примечание!!!
+     *
+     * Вызывать данную функцию в начале работы генератора, так как без данных автозаполнения,
+     * программа будет заверщшаться с ошибкой
+     */
     fun preload() {
         variableNames = parseStringList(File(variableNamesPath).readText(), key)
         enumConstantNames = parseStringList(File(enumConstantNamesPath).readText(), key)
@@ -47,12 +47,7 @@ object Templates {
         enumNames = parseStringList(File(enumNamesPath).readText(), key)
         classNames = parseStringList(File(classNamesPath).readText(), key)
         namespaceNames = parseStringList(File(namespaceNamesPath).readText(), key)
-    }
-
-    private fun parseStringList(jsonStr: String, fieldName: String): List<String> {
-        return json.parseToJsonElement(jsonStr)
-            .jsonObject[fieldName]!!
-            .jsonArray
-            .map { it.jsonPrimitive.content }
+        statements = parseStringList(File(statementsPath).readText(), key)
+        forStatements = parseStringList(File(forStatementsPath).readText(), key)
     }
 }

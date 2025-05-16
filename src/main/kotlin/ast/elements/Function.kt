@@ -6,7 +6,6 @@ import ast.MultiLine
 import ast.WithRandomAutocomplete
 import templates.Templates
 import templates.Type
-import templates.getValueBy
 
 /**
  * Элемент функции / метода
@@ -32,8 +31,8 @@ data class Function(
 
     override fun autocomplete() {
         // Возвращаемый тип
-        if (Type.getBy(returnType) == Type.UNDEFINED) {
-            returnType = Type.getRandom().value
+        if (Type.by(returnType) == Type.UNDEFINED) {
+            returnType = Type.random().value
         }
 
         // Имя
@@ -64,7 +63,7 @@ data class Function(
         // Определение, если есть
         if (isDefinition) {
             body?.toStringArray()?.let { addAll(it) }
-            add(size - 1, "return ${getValueBy(Type.getBy(returnType)) ?: ""};")
+            add(size - 1, "return ${Type.by(returnType).definition() ?: ""};")
         }
     }
 }
