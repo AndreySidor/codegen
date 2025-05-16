@@ -6,6 +6,7 @@ import templates.getValueBy
 
 data class Function(
     val isStatic : Boolean = false,
+    val isDefinition : Boolean = true,
     var returnType : Type? = null,
     var name : String? = null,
     val params : List<Declaration.Parameter>? = null,
@@ -31,8 +32,12 @@ data class Function(
                 it.toString()
             } ?: ""
         })")
-        result.addAll(body?.toStringArray() ?: Body.empty())
-        result.add(result.size - 1, "return ${getValueBy(returnType!!)};")
+        if (isDefinition) {
+            result.addAll(body?.toStringArray() ?: Body.empty())
+            result.add(result.size - 1, "return ${getValueBy(returnType!!)};")
+        } else {
+            result.add(";");
+        }
         return result
     }
 }
