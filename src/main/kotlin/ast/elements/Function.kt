@@ -1,9 +1,8 @@
 package ast.elements
 
-import ast.BaseContainerElement
-import ast.BaseElement
-import ast.MultiLine
-import ast.WithRandomAutocomplete
+import ast.*
+import patterns.serializers.ElementSerializer
+import patterns.serializers.FunctionSerializer
 import templates.Templates
 import templates.Type
 
@@ -23,7 +22,11 @@ data class Function(
     var name : String = "",
     val params : MutableList<Declaration.Parameter> = mutableListOf(),
     var body : Body? = null
-) : BaseContainerElement(), MultiLine, SpaceElement, ClassElement, WithRandomAutocomplete {
+) : BaseContainerElement(), MultiLine, SpaceElement, ClassElement, WithRandomAutocomplete, Serializable<Function> {
+
+    override val serializer: ElementSerializer<Function>
+        get() = FunctionSerializer
+
     init {
         autocomplete()
         updateRelations()

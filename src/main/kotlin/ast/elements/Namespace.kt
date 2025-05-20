@@ -1,6 +1,8 @@
 package ast.elements
 
 import ast.*
+import patterns.serializers.ElementSerializer
+import patterns.serializers.NamespaceSerializer
 import templates.Templates
 
 /**
@@ -16,7 +18,11 @@ interface SpaceElement
 data class Namespace(
     var name : String = "",
     val elements : MutableList<SpaceElement> = mutableListOf()
-) : BaseContainerElement(), MultiLine, SpaceElement, WithRandomAutocomplete {
+) : BaseContainerElement(), MultiLine, SpaceElement, WithRandomAutocomplete, Serializable<Namespace> {
+
+    override val serializer: ElementSerializer<Namespace>
+        get() = NamespaceSerializer
+
     init {
         autocomplete()
         updateRelations()

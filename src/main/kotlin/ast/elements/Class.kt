@@ -1,6 +1,8 @@
 package ast.elements
 
 import ast.*
+import patterns.serializers.ClassSerializer
+import patterns.serializers.ElementSerializer
 import templates.Templates
 
 /**
@@ -22,7 +24,19 @@ data class Class(
     val protectedElement : MutableList<ClassElement> = mutableListOf(),
     val publicElements : MutableList<ClassElement> = mutableListOf(),
     var parentClass : Class? = null
-) : BaseContainerElement(), MultiLine, SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete {
+) : BaseContainerElement(), MultiLine,
+    SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete, Serializable<Class> {
+
+    /**
+     * Костыль, чтобы при парсинге шаблона найти потом родительский класс, и установить его в поле parentClass
+     *
+     * Примечание: НЕ ТРОГАТЬ ЭТУ ПЕРЕМЕННУЮ И НЕ ИНИЦИАЛИЗИРОВАТЬ ЕЕ НИЧЕМ
+     */
+    var parentClassName : String? = null
+
+    override val serializer: ElementSerializer<Class>
+        get() = ClassSerializer
+
     init {
         autocomplete()
         updateRelations()

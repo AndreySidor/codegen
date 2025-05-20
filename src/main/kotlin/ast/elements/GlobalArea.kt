@@ -1,6 +1,8 @@
 package ast.elements
 
 import ast.*
+import patterns.serializers.ElementSerializer
+import patterns.serializers.GlobalAreaSerializer
 
 /**
  * Элемент глобальной области
@@ -8,7 +10,10 @@ import ast.*
  */
 data class GlobalArea(
     val elements : MutableList<SpaceElement> = mutableListOf()
-) : BaseContainerElement(), MultiLine, SingleLine {
+) : BaseContainerElement(), MultiLine, SingleLine, Serializable<GlobalArea> {
+
+    override val serializer: ElementSerializer<GlobalArea>
+        get() = GlobalAreaSerializer
 
     init {
         updateRelations()

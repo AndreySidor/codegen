@@ -1,12 +1,14 @@
 package ast.elements
 
 import ast.BaseContainerElement
-import ast.BaseElement
 import ast.MultiLine
+import ast.Serializable
 import ast.WithRandomAutocomplete
+import patterns.serializers.ElementSerializer
+import patterns.serializers.ForSerializer
+import patterns.serializers.WhileSerializer
 import templates.Templates.forStatements
 import templates.Templates.statements
-import kotlin.random.Random
 
 /**
  * Элемент цикла for и while
@@ -29,7 +31,11 @@ sealed class Cycle(
     class For(
         stmt : String = "",
         body : Body = Body()
-    ) : Cycle(stmt, body) {
+    ) : Cycle(stmt, body), Serializable<For> {
+
+        override val serializer: ElementSerializer<For>
+            get() = ForSerializer
+
         init {
             autocomplete()
             updateRelations()
@@ -61,7 +67,11 @@ sealed class Cycle(
     class While(
         stmt : String = "",
         body : Body = Body()
-    ) : Cycle(stmt, body) {
+    ) : Cycle(stmt, body), Serializable<While> {
+
+        override val serializer: ElementSerializer<While>
+            get() = WhileSerializer
+
         init {
             autocomplete()
             updateRelations()

@@ -1,10 +1,13 @@
 package ast.elements
 
 import ast.BaseContainerElement
-import ast.BaseElement
 import ast.MultiLine
+import ast.Serializable
 import ast.WithRandomAutocomplete
-import templates.Templates.preload
+import ast.elements.If.ElseIf
+import patterns.serializers.ElementSerializer
+import patterns.serializers.ElseIfSerializer
+import patterns.serializers.IfSerializer
 import templates.Templates.statements
 
 /**
@@ -19,7 +22,11 @@ data class If(
     val body : Body = Body(),
     val elseIfDeclarations : MutableList<ElseIf> = mutableListOf(),
     val elseBody : Body? = null
-) : BaseContainerElement(), BodyElement, MultiLine, WithRandomAutocomplete {
+) : BaseContainerElement(), BodyElement, MultiLine, WithRandomAutocomplete, Serializable<If> {
+
+    override val serializer: ElementSerializer<If>
+        get() = IfSerializer
+
     init {
         autocomplete()
         updateRelations()
@@ -55,7 +62,11 @@ data class If(
     data class ElseIf(
         var stmt: String = "",
         val body : Body = Body(),
-    ) : BaseContainerElement(), MultiLine, WithRandomAutocomplete {
+    ) : BaseContainerElement(), MultiLine, WithRandomAutocomplete, Serializable<ElseIf> {
+
+        override val serializer: ElementSerializer<ElseIf>
+            get() = ElseIfSerializer
+
         init {
             autocomplete()
             updateRelations()

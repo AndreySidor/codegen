@@ -1,9 +1,8 @@
 package ast.elements
 
-import ast.BaseContainerElement
-import ast.BaseElement
-import ast.MultiLine
-import ast.WithRandomAutocomplete
+import ast.*
+import patterns.serializers.ElementSerializer
+import patterns.serializers.EnumClassSerializer
 import templates.Templates
 
 /**
@@ -14,7 +13,12 @@ import templates.Templates
 data class EnumClass(
     var name : String = "",
     val elements : MutableList<Declaration.EnumConstant> = mutableListOf()
-) : BaseContainerElement(), MultiLine, SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete {
+) : BaseContainerElement(), MultiLine,
+    SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete, Serializable<EnumClass> {
+
+    override val serializer: ElementSerializer<EnumClass>
+        get() = EnumClassSerializer
+
     init {
         autocomplete()
         updateRelations()

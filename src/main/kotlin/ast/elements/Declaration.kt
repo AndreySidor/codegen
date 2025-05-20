@@ -1,8 +1,13 @@
 package ast.elements
 
 import ast.BaseElement
+import ast.Serializable
 import ast.SingleLine
 import ast.WithRandomAutocomplete
+import patterns.serializers.ElementSerializer
+import patterns.serializers.EnumConstantSerializer
+import patterns.serializers.ParameterSerializer
+import patterns.serializers.VariableSerializer
 import templates.Templates
 import templates.Type
 
@@ -27,7 +32,11 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
         var name : String = "",
         var isDefinition : Boolean = false,
         var definition : String? = null
-    ) : BodyElement, SpaceElement, ClassElement, Declaration() {
+    ) : BodyElement, SpaceElement, ClassElement, Declaration(), Serializable<Variable> {
+
+        override val serializer: ElementSerializer<Variable>
+            get() = VariableSerializer
+
         init {
             autocomplete()
         }
@@ -68,7 +77,11 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
      * Элемент элемента перечисления
      * @param name имя элемента перечисления
      */
-    data class EnumConstant(var name : String = "") : Declaration() {
+    data class EnumConstant(var name : String = "") : Declaration(), Serializable<EnumConstant> {
+
+        override val serializer: ElementSerializer<EnumConstant>
+            get() = EnumConstantSerializer
+
         init {
             autocomplete()
         }
@@ -93,7 +106,11 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
         var isConst : Boolean = false,
         var type : String = "",
         var name : String = ""
-    ) : Declaration() {
+    ) : Declaration(), Serializable<Parameter> {
+
+        override val serializer: ElementSerializer<Parameter>
+            get() = ParameterSerializer
+
         init {
             autocomplete()
         }

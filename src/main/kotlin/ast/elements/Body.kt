@@ -1,9 +1,8 @@
 package ast.elements
 
-import ast.BaseContainerElement
-import ast.BaseElement
-import ast.MultiLine
-import ast.SingleLine
+import ast.*
+import patterns.serializers.BodySerializer
+import patterns.serializers.ElementSerializer
 
 /**
  * Элемент может находиться внутри Body
@@ -16,7 +15,11 @@ interface BodyElement
  */
 data class Body(
     val elements : MutableList<BodyElement> = mutableListOf()
-) : BaseContainerElement(), MultiLine, BodyElement {
+) : BaseContainerElement(), MultiLine, BodyElement, Serializable<Body> {
+
+    override val serializer: ElementSerializer<Body>
+        get() = BodySerializer
+
     init {
         updateRelations()
     }
