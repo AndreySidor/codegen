@@ -65,7 +65,7 @@ data class Function(
 
         // Определение, если есть
         if (isDefinition) {
-            body?.toStringArray()?.let { addAll(it) }
+            body?.toStringArray()?.let { addAll(it) } ?: addAll(Body().toStringArray())
             add(size - 1, "return ${Type.by(returnType).definition() ?: ""};")
         }
     }
