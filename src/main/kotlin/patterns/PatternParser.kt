@@ -18,10 +18,12 @@ import kotlin.random.Random
  * 1. ! - элемент необходим в паттерне
  * 2. ? - элемент может отсутствовать в паттерне
  * 3. {;} - параметры элемента разделенные точкой с запятой
- * 4. (,) - список с элементами разделенные запятой
+ * 4. (,) - список с элементами разделенные запятой, только [BaseElement]
  * 5. : - разделитель для уровня сложности, ! или ? и ключевого слова
- * 6. E, M, H - уровни сложности (easy, medium, hard), чувствительны к регистру, только caps
+ * 6. E, M, H - уровни сложности (easy, medium, hard), без учета регистра
  * 7. "" - строковые параметры оборачиваются в двойные кавычки
+ * 8. [,] - один из многих, список [BaseElement], который возвращает рандомно один из элементов
+ * (МОЖНО ИСПОЛЬЗОВАТЬ ТОЛЬКО ВНУТРИ СПИСКА, НЕ МОЖЕТ БЫТЬ ПУТЫМ И ДОЛЖЕН ВЕРНУТЬ ХОТЯ БЫ ОДИН ЭЛЕМЕНТ)
  *
  * Шаблоны элементов:
  * 1. global{()}
@@ -87,7 +89,7 @@ object PatternParser {
                         when (tmp) {
                             "?" -> isRandom = true
                             "!" -> isRandom = false
-                            else -> currentDifficult = Difficult.by(tmp)
+                            else -> currentDifficult = Difficult.by(tmp.uppercase())
                         }
 
                         // Очищаем строку для записи нового значения
@@ -243,7 +245,7 @@ object PatternParser {
 
         // Если список состояний не пуст, значит была ошибка в паттерне
         if (state.isNotEmpty()) {
-            throw IllegalStateException("parse: " + state.joinToString(", ") { it.name })
+            throw IllegalStateException("parseParams: " + state.joinToString(", ") { it.name })
         } else {
             return result
         }
@@ -251,7 +253,7 @@ object PatternParser {
 
     /**
      * Парсинг списка
-     * @param list список в строковой форме заключенный в круглые скобки
+     * @param list список в строковой форме заключенный в круглые скобки, элементы [BaseElement]
      * @param difficult сложность
      * @return список [T]
      */
@@ -264,6 +266,8 @@ object PatternParser {
 
         val result = mutableListOf<T>()
 
+        val oneOfMany = mutableListOf<String>()
+
         val filteredList = list.trim().drop(1).dropLast(1)
 
         // Парсинг
@@ -272,11 +276,22 @@ object PatternParser {
                 ',' -> {
                     // Если запятая не в строковом параметре и список состояний пуст, то есть верхний уровень
                     if (state.isEmpty()) {
-                        // Парсим элемент, и если он не null, то добавляем в результирующий список
-                        parse(tmp, difficult)?.let { element ->
-                            (element as? T)?.let(result::add)
-                                ?: throw IllegalArgumentException("parseList: invalid element type")
+                        // Если список oneOfMany не пустой, то парсим oneOfMany, и очищаем список
+                        if (oneOfMany.isNotEmpty()) {
+                            result.add(parseOneOfMany(oneOfMany, difficult))
+                            oneOfMany.clear()
+                        } else {
+                            // Парсим элемент, и если он не null, то добавляем в результирующий список
+                            parse(tmp, difficult)?.let { element ->
+                                (element as? T)?.let(result::add)
+                                    ?: throw IllegalArgumentException("parseList: invalid element type")
+                            }
                         }
+                        tmp = ""
+
+                        // Если 1 ступень и состояние oneOfMany, то добавляем еще одну строку к oneOfMany
+                    } else if (state.count() == 1 && state.first() == ParserStates.ONE_OF_MANY) {
+                        oneOfMany.add(tmp)
                         tmp = ""
                     } else {
                         tmp += it
@@ -295,6 +310,25 @@ object PatternParser {
                         state.removeLast()
                     }
                     tmp += it
+                }
+                '[' -> {
+                    // Если список состояний пустой, то добавляем состояние oneOfMany
+                    if (state.isEmpty()) {
+                        state.add(ParserStates.ONE_OF_MANY)
+                    } else {
+                        tmp += it
+                    }
+                }
+                ']' -> {
+                    // Если список состояний находится на 1 ступени oneOfMany, то удаляем это состояние, и записываем значение tmp в oneOfMany
+                    if (state.count() == 1 && state.first() == ParserStates.ONE_OF_MANY) {
+                        state.removeLast()
+                        if (tmp.isNotEmpty() && tmp.isNotBlank()) {
+                            oneOfMany.add(tmp)
+                        }
+                    } else {
+                        tmp += it
+                    }
                 }
                 '"' -> {
                     // Если строковый литерал не экранированный, то записываем его в список состояний, либо удаляем соответственно
@@ -318,17 +352,43 @@ object PatternParser {
 
         // Парсим последний элемент и добавляем в список
         if (tmp.isNotEmpty() && tmp.isNotBlank()) {
-            parse(tmp, difficult)?.let {
-                (it as? T)?.let(result::add)
-                    ?: throw IllegalArgumentException("parseList: invalid element type")
+            if (oneOfMany.isNotEmpty()) {
+                result.add(parseOneOfMany(oneOfMany, difficult))
+                oneOfMany.clear()
+            } else {
+                parse(tmp, difficult)?.let {
+                    (it as? T)?.let(result::add)
+                        ?: throw IllegalArgumentException("parseList: invalid element type")
+                }
             }
         }
 
         // Если список состояний не пуст, значит была ошибка в паттерне
         if (state.isNotEmpty()) {
-            throw IllegalStateException("parse: " + state.joinToString(", ") { it.name })
+            throw IllegalStateException("parseList: " + state.joinToString(", ") { it.name })
         } else {
             return result
+        }
+    }
+
+    /**
+     * Парсинг списка элементов типа один из многих
+     * @param many множество элементов в строковой форме [BaseElement]
+     * @param difficult сложность шаблона
+     * @return элемент [T]
+     */
+    private fun<T> parseOneOfMany(many : List<String>, difficult: Difficult?) : T {
+        val result = mutableListOf<T>()
+        many.forEach {
+            parse(it, difficult)?.let { element ->
+                (element as? T)?.let(result::add)
+                    ?: throw IllegalArgumentException("parseOneOfMany: invalid element type")
+            }
+        }
+        if (result.isEmpty()) {
+            throw IllegalStateException("parseOneOfMany result must contained at least of one element")
+        } else {
+            return result.random()
         }
     }
 
@@ -379,6 +439,7 @@ object PatternParser {
         KEY,
         PARAMS,
         LIST,
-        STRING_PARAM
+        STRING_PARAM,
+        ONE_OF_MANY
     }
 }
