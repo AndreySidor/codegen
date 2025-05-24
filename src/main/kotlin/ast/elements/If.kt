@@ -1,9 +1,6 @@
 package ast.elements
 
-import ast.BaseContainerElement
-import ast.MultiLine
-import ast.Serializable
-import ast.WithRandomAutocomplete
+import ast.*
 import ast.elements.If.ElseIf
 import patterns.serializers.ElementSerializer
 import patterns.serializers.ElseIfSerializer
@@ -54,6 +51,14 @@ data class If(
         elseBody?.updateRelations()
     }
 
+    override fun getChildElements(): List<BaseElement> = buildList {
+        addAll(body.getChildElements())
+        addAll(elseIfDeclarations)
+        elseBody?.let {
+            add(it)
+        }
+    }
+
     /**
      * Элемент else if блока
      * @param stmt условие
@@ -84,6 +89,8 @@ data class If(
             body.parent = this
             body.updateRelations()
         }
+
+        override fun getChildElements(): List<BaseElement> = body.getChildElements()
 
         override fun toStringArray(): List<String> = buildList {
             // Условие

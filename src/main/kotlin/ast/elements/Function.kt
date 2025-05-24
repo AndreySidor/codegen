@@ -19,10 +19,11 @@ data class Function(
     var isStatic : Boolean = false,
     var isDefinition : Boolean = false,
     var returnType : String = "",
-    var name : String = "",
+    override var name : String = "",
     val params : MutableList<Declaration.Parameter> = mutableListOf(),
     var body : Body? = null
-) : BaseContainerElement(), MultiLine, SpaceElement, ClassElement, WithRandomAutocomplete, Serializable<Function> {
+) : BaseContainerElement(), MultiLine, SpaceElement, ClassElement, WithRandomAutocomplete,
+    Serializable<Function>, NamedElement {
 
     override val serializer: ElementSerializer<Function>
         get() = FunctionSerializer
@@ -53,6 +54,13 @@ data class Function(
         // Тело
         body?.parent = this
         body?.updateRelations()
+    }
+
+    override fun getChildElements(): List<BaseElement> = buildList {
+        addAll(params)
+        body?.let {
+            add(it)
+        }
     }
 
     override fun toStringArray(): List<String> = buildList {

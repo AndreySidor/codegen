@@ -26,6 +26,9 @@ data class GlobalArea(
             (it as? BaseContainerElement)?.updateRelations()
         }
     }
+
+    override fun getChildElements(): List<BaseElement> = elements as List<BaseElement>
+
     override fun toStringArray(): List<String> = buildList {
         // Элементы глобальной области
         elements.forEach {

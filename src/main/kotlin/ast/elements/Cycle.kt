@@ -1,9 +1,6 @@
 package ast.elements
 
-import ast.BaseContainerElement
-import ast.MultiLine
-import ast.Serializable
-import ast.WithRandomAutocomplete
+import ast.*
 import patterns.serializers.ElementSerializer
 import patterns.serializers.ForSerializer
 import patterns.serializers.WhileSerializer
@@ -96,6 +93,8 @@ sealed class Cycle(
             const val WHILE = "while"
         }
     }
+
+    override fun getChildElements(): List<BaseElement> = body.getChildElements()
 
     override fun toStringArray(): List<String> = buildList {
         // Тип и условие

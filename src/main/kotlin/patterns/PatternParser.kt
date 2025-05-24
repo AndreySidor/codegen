@@ -1,5 +1,6 @@
 package patterns
 
+import ast.BaseContainerElement
 import ast.BaseElement
 import patterns.PatternParser.parse
 import patterns.serializers.*
@@ -29,7 +30,7 @@ import kotlin.random.Random
  * 1. global{()}
  * 2. namespace{name;()}
  * 3. enum{name;()}
- * 4. class{name;parentClassId;();();()}
+ * 4. class{name;parentClassId;();();();identifier}
  * 5. function{isStatic;isDefinition;type;name;();()}
  * 6. for{stmt;()}
  * 7. while{stmt;()}
@@ -53,12 +54,26 @@ import kotlin.random.Random
 object PatternParser {
 
     /**
+     * Основная функция для парсинга шаблона с линковкой классов
+     * @param pattern шаблон
+     * @param difficult сложность, которую необходимо соблюдать
+     * @return элемент AST [BaseElement]
+     */
+    fun parseWithLinkers(pattern : String, difficult: Difficult?) : BaseElement? {
+        return parse(pattern, difficult).apply {
+            (this as? BaseContainerElement)?.let {
+                ClassLinker.linkClasses(it)
+            }
+        }
+    }
+
+    /**
      * Основная функция для парсинга шаблона
      * @param pattern шаблон
      * @param difficult сложность, которую необходимо соблюдать
      * @return элемент AST [BaseElement]
      */
-    fun parse(pattern : String, difficult: Difficult?) : BaseElement? {
+    private fun parse(pattern : String, difficult: Difficult?) : BaseElement? {
         // Начальное состояние обработки KEY
         val state = mutableListOf(ParserStates.KEY)
 

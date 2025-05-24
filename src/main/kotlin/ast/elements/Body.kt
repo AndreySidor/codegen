@@ -32,6 +32,8 @@ data class Body(
         }
     }
 
+    override fun getChildElements(): List<BaseElement> = elements as List<BaseElement>
+
     override fun toStringArray(): List<String> = buildList {
         // Открывающая фигурная скобка
         add("{")

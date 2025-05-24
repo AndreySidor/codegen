@@ -16,9 +16,9 @@ interface SpaceElement
  * @param elements элементы [SpaceElement]
  */
 data class Namespace(
-    var name : String = "",
+    override var name : String = "",
     val elements : MutableList<SpaceElement> = mutableListOf()
-) : BaseContainerElement(), MultiLine, SpaceElement, WithRandomAutocomplete, Serializable<Namespace> {
+) : BaseContainerElement(), MultiLine, SpaceElement, WithRandomAutocomplete, Serializable<Namespace>, NamedScope {
 
     override val serializer: ElementSerializer<Namespace>
         get() = NamespaceSerializer
@@ -42,6 +42,8 @@ data class Namespace(
             (it as? BaseContainerElement)?.updateRelations()
         }
     }
+
+    override fun getChildElements(): List<BaseElement> = elements as List<BaseElement>
 
     override fun toStringArray(): List<String> = buildList {
         // Имя

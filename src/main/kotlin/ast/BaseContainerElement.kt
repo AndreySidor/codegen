@@ -8,4 +8,9 @@ abstract class BaseContainerElement : BaseElement() {
      * Функция для обновления связей между родителем и его потомками (parent)
      */
     abstract fun updateRelations()
+
+    /**
+     * Получение всех вложенных элементов контейнера
+     */
+    abstract fun getChildElements() : List<BaseElement>
 }

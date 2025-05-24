@@ -1,9 +1,6 @@
 package ast.elements
 
-import ast.BaseElement
-import ast.Serializable
-import ast.SingleLine
-import ast.WithRandomAutocomplete
+import ast.*
 import patterns.serializers.ElementSerializer
 import patterns.serializers.EnumConstantSerializer
 import patterns.serializers.ParameterSerializer
@@ -14,7 +11,7 @@ import templates.Type
 /**
  * Элемент объявления переменной, поля класса, элемента перечисления, параметра функции или метода
  */
-sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
+sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete, NamedElement {
 
     /**
      * Элемент объявления переменной
@@ -29,7 +26,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
         var isStatic : Boolean = false,
         var isConst : Boolean = false,
         var type : String = "",
-        var name : String = "",
+        override var name : String = "",
         var isDefinition : Boolean = false,
         var definition : String? = null
     ) : BodyElement, SpaceElement, ClassElement, Declaration(), Serializable<Variable> {
@@ -77,7 +74,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
      * Элемент элемента перечисления
      * @param name имя элемента перечисления
      */
-    data class EnumConstant(var name : String = "") : Declaration(), Serializable<EnumConstant> {
+    data class EnumConstant(override var name : String = "") : Declaration(), Serializable<EnumConstant> {
 
         override val serializer: ElementSerializer<EnumConstant>
             get() = EnumConstantSerializer
@@ -105,7 +102,7 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete {
     data class Parameter(
         var isConst : Boolean = false,
         var type : String = "",
-        var name : String = ""
+        override var name : String = ""
     ) : Declaration(), Serializable<Parameter> {
 
         override val serializer: ElementSerializer<Parameter>

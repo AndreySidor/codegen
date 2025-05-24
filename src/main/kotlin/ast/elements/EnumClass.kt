@@ -11,10 +11,10 @@ import templates.Templates
  * @param elements элементы перечисления [Declaration.EnumConstant]
  */
 data class EnumClass(
-    var name : String = "",
+    override var name : String = "",
     val elements : MutableList<Declaration.EnumConstant> = mutableListOf()
 ) : BaseContainerElement(), MultiLine,
-    SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete, Serializable<EnumClass> {
+    SpaceElement, BodyElement, ClassElement, WithRandomAutocomplete, Serializable<EnumClass>, NamedScope {
 
     override val serializer: ElementSerializer<EnumClass>
         get() = EnumClassSerializer
@@ -37,6 +37,8 @@ data class EnumClass(
             (it as? BaseElement)?.parent = this
         }
     }
+
+    override fun getChildElements(): List<BaseElement> = elements
 
     override fun toStringArray(): List<String> = buildList {
         // Имя
