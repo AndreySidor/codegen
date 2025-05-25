@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.fullName
 import patterns.serializers.ClassSerializer
 import patterns.serializers.ElementSerializer
 import templates.Templates
@@ -62,44 +63,14 @@ data class Class(
             (it as? BaseElement)?.parent = this
             (it as? BaseContainerElement)?.updateRelations()
         }
-
-        // Простановка связей родительскому классу
-        parentClass?.parent = this
-        parentClass?.updateRelations()
     }
 
     override fun getChildElements(): List<BaseElement> = (publicElements + protectedElements + privateElements) as List<BaseElement>
 
-    /**
-     * Полное имя родительского класса с учетом родительских областей видимости
-     */
-    private fun parentClassFullName() : String = buildString {
-        // Имя родительского класса
-        parentClass?.let { append(it.name) }
-
-        // Перебор по именованным областям видимости
-        var current : BaseElement? = parentClass
-        var parent = parentClass?.parent
-        while (parent is NamedScope) {
-
-            // Если родитель класс и наш элемент располагается в private или protected области видимости
-            if (current is ClassElement && parent is Class) {
-                if (!parent.publicElements.contains(current)) {
-                    break
-                }
-            }
-
-            // Добавить имя области видимости в начало полного имени
-            insert(0, "${parent.name}::")
-            current = parent
-            parent = parent.parent
-        }
-    }
-
     override fun toStringArray(): List<String> = buildList {
         // Имя класса и его родителя
         add("class $name ${
-            parentClassFullName().takeIf { it.isNotEmpty() }?.let { 
+            (parentClass as? NamedElement)?.fullName()?.takeIf { it.isNotEmpty() }?.let { 
                 ": $it"
             } ?: ""
         }")
