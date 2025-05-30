@@ -8,6 +8,9 @@ import ast.elements.SpaceElement
 /**
  * Указатель на конкретное место в коде, может использоваться в задачах
  */
-object UsageIdentifier : SingleLine, BodyElement, BaseElement(), SpaceElement {
+class UsageIdentifier : SingleLine, BodyElement, BaseElement(), SpaceElement {
+
+    override fun clone(): BaseElement = UsageIdentifier()
+
     override fun toString(): String = "/*!!??!!*/"
 }
