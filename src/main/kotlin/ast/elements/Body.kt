@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneElements
 import patterns.serializers.BodySerializer
 import patterns.serializers.ElementSerializer
 
@@ -32,7 +33,17 @@ data class Body(
         }
     }
 
-    override fun getChildElements(): List<BaseElement> = elements as List<BaseElement>
+    override fun getChildElements(): List<BaseElement> = elements.toList() as List<BaseElement>
+
+    override fun delete(element: BaseElement) {
+        (element as? BodyElement)?.let {
+            elements.remove(it)
+        } ?: throw ClassCastException("body delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = Body(
+        elements = elements.cloneElements()
+    ).apply { updateRelations() }
 
     override fun toStringArray(): List<String> = buildList {
         // Открывающая фигурная скобка

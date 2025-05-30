@@ -2,6 +2,8 @@ package ast.elements
 
 import ast.*
 import ast.elements.If.ElseIf
+import patterns.cloneElements
+import patterns.cloneWithCast
 import patterns.serializers.ElementSerializer
 import patterns.serializers.ElseIfSerializer
 import patterns.serializers.IfSerializer
@@ -18,7 +20,7 @@ data class If(
     var stmt : String = "",
     val body : Body = Body(),
     val elseIfDeclarations : MutableList<ElseIf> = mutableListOf(),
-    val elseBody : Body? = null
+    var elseBody : Body? = null
 ) : BaseContainerElement(), BodyElement, MultiLine, WithRandomAutocomplete, Serializable<If> {
 
     override val serializer: ElementSerializer<If>
@@ -40,6 +42,7 @@ data class If(
         // else if блоки проставление связи parent
         elseIfDeclarations.forEach {
             it.parent = this
+            it.updateRelations()
         }
 
         // Тело основного условия проставление связи parent
@@ -52,12 +55,29 @@ data class If(
     }
 
     override fun getChildElements(): List<BaseElement> = buildList {
-        addAll(body.getChildElements())
-        addAll(elseIfDeclarations)
+        add(body)
+        addAll(elseIfDeclarations.toList())
         elseBody?.let {
             add(it)
         }
     }
+
+    override fun delete(element: BaseElement) {
+        (element as? Body)?.let {
+            when (it) {
+                body -> (parent as BaseContainerElement).delete(this)
+                elseBody -> elseBody = null
+            }
+        } ?: (element as? ElseIf)?.let {
+            elseIfDeclarations.remove(it)
+        } ?: throw ClassCastException("if delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = this.copy(
+        body = body.cloneWithCast(),
+        elseIfDeclarations = elseIfDeclarations.cloneElements(),
+        elseBody = elseBody?.cloneWithCast()
+    ).apply { updateRelations() }
 
     /**
      * Элемент else if блока
@@ -90,7 +110,17 @@ data class If(
             body.updateRelations()
         }
 
-        override fun getChildElements(): List<BaseElement> = body.getChildElements()
+        override fun getChildElements(): List<BaseElement> = listOf(body)
+
+        override fun delete(element: BaseElement) {
+            ((element as? Body) ?: throw ClassCastException("Elif delete: ${element::class}")).takeIf { it == body }?.let {
+                (parent as BaseContainerElement).delete(this)
+            }
+        }
+
+        override fun clone(): BaseElement = this.copy(
+            body = body.cloneWithCast()
+        ).apply { updateRelations() }
 
         override fun toStringArray(): List<String> = buildList {
             // Условие

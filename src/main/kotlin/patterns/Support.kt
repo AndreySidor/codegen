@@ -82,3 +82,124 @@ fun BaseElement.containingContainer() : BaseContainerElement = when (parent) {
     }
     else -> parent as BaseContainerElement
 }
+
+/**
+ * Найти все элементы по заданному условию, поиск осуществляется в глубину, не учитывает корневой элемент поиска
+ * @param before если указан данный параметр, то будут найдены все элементы удовлетворяющие условию до этого
+ * @param reverse искать в обратном порядке, поиск осуществляется по getChildElements()
+ * @param condition условие поиска
+ * @return список [BaseElement]
+ */
+fun BaseContainerElement.findAll(
+    before : BaseElement? = null,
+    reverse : Boolean = false,
+    condition : ((BaseElement) -> Boolean)
+) : List<BaseElement> {
+    // Нужна для отслеживания before в рекурсии, чтобы в основной функции не добавлять не нужный параметр в возвращаемом значении
+    fun BaseContainerElement.innerFindAll(
+        before : BaseElement? = null,
+        reverse : Boolean = false,
+        condition : ((BaseElement) -> Boolean)
+    ) : Pair<List<BaseElement>, Boolean> {
+        val result = mutableListOf<BaseElement>()
+        var isBeforeFind = false
+        for (it in if (reverse) getChildElements().reversed() else getChildElements()) {
+
+            // Если найден элемент до которого осуществляем поиск, то прерываем цикл
+            if (before != null && it == before) {
+                isBeforeFind = true
+                break
+            }
+
+            // Проверяем условие и добавляем элемент в список
+            if (condition.invoke(it)) {
+                result.add(it)
+            }
+
+            // Для всех контейнеров элементов осуществляем такой же поиск
+            if (it is BaseContainerElement) {
+                val nestedResults = it.innerFindAll(before, reverse, condition)
+                result.addAll(nestedResults.first)
+
+                // Если во вложенном поиске встретили before, прекращаем поиск
+                if (nestedResults.second) {
+                    isBeforeFind = true
+                    break
+                }
+            }
+        }
+        return result to isBeforeFind
+    }
+
+    return innerFindAll(before, reverse, condition).first
+}
+
+/**
+ * Поиск элементов в родителях
+ * @param to до какого элемента осуществляем поиск
+ * @param condition условие нахождения элемента
+ * @return список [BaseElement]
+ */
+fun BaseElement.findInParents(
+    to : BaseElement? = null,
+    condition : ((BaseElement) -> Boolean)
+) : List<BaseElement> {
+    val result = mutableListOf<BaseElement>()
+    var currentParent = parent
+
+    // Осуществляем поиск, пока родитель существует и не является to
+    while (currentParent != null && currentParent != to) {
+
+        // Для каждого элемента родительского контейнера осуществляем поиск
+        if (currentParent is BaseContainerElement) {
+            for (element in currentParent.getChildElements()) {
+
+                // Возвращаем результат, если наткнулись на to
+                if (element == to) {
+                    return result
+                }
+
+                // Проверяем условие и добавляем результат
+                if (condition.invoke(element)) {
+                    result.add(element)
+                }
+            }
+        }
+        currentParent = currentParent.parent
+    }
+    return result
+}
+
+/**
+ * Функция удаления элемента из дерева, элемент удаляет себя из родительского контейнера, путем применения метода delete
+ */
+fun BaseElement.destroy() {
+    (parent as? BaseContainerElement)?.delete(this)
+        ?: throw IllegalStateException("destroy element error: ${this::class}")
+}
+
+/**
+ * Удаление всех элементов удовлетворяющих условию из дерева
+ */
+fun BaseContainerElement.deleteAll(condition : ((BaseElement) -> Boolean)) {
+    this.findAll(condition = condition).forEach {
+        it.destroy()
+    }
+}
+
+/**
+ * Клонирование списка [BaseElement] элементов сразу с приведением типов
+ */
+fun <T> MutableList<T>.cloneElements(): MutableList<T> = map { element ->
+    when (element) {
+        is BaseElement -> element.cloneWithCast<T>()
+        else -> throw TypeCastException(
+            "Element ${element.toString()} must inherit from BaseElement to support cloning"
+        )
+    }
+}.toMutableList()
+
+/**
+ * Клонирование элемента типа [BaseElement] с приведением типа
+ */
+fun<T> BaseElement.cloneWithCast() : T = clone() as T

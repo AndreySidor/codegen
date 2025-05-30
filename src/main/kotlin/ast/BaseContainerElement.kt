@@ -13,4 +13,9 @@ abstract class BaseContainerElement : BaseElement() {
      * Получение всех вложенных элементов контейнера
      */
     abstract fun getChildElements() : List<BaseElement>
+
+    /**
+     * Удаление содержащегося элемента из контейнера
+     */
+    abstract fun delete(element : BaseElement)
 }
