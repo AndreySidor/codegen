@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneWithCast
 import patterns.serializers.ElementSerializer
 import patterns.serializers.ForSerializer
 import patterns.serializers.WhileSerializer
@@ -53,6 +54,11 @@ sealed class Cycle(
             }
         }
 
+        override fun clone(): BaseElement = For(
+            stmt = stmt,
+            body = body.cloneWithCast()
+        ).apply { updateRelations() }
+
         companion object {
             const val FOR = "for"
         }
@@ -89,12 +95,23 @@ sealed class Cycle(
             }
         }
 
-        companion object {
+        override fun clone(): BaseElement = While(
+            stmt = stmt,
+            body = body.cloneWithCast()
+        ).apply { updateRelations() }
+
+            companion object {
             const val WHILE = "while"
         }
     }
 
-    override fun getChildElements(): List<BaseElement> = body.getChildElements()
+    override fun getChildElements(): List<BaseElement> = listOf(body)
+
+    override fun delete(element: BaseElement) {
+        ((element as? Body) ?: ClassCastException("Cycle delete: ${element::class}")).takeIf { it == body }?.let {
+            (parent as BaseContainerElement).delete(this)
+        }
+    }
 
     override fun toStringArray(): List<String> = buildList {
         // Тип и условие

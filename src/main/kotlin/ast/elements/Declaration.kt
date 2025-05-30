@@ -55,6 +55,8 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete, Na
             }
         }
 
+        override fun clone(): BaseElement = this.copy()
+
         override fun toString(): String = buildString {
             // Статичность
             if (isStatic) append("static ")
@@ -90,6 +92,8 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete, Na
             }
         }
 
+        override fun clone(): BaseElement = this.copy()
+
         override fun toString(): String = name
     }
 
@@ -123,6 +127,8 @@ sealed class Declaration : BaseElement(), SingleLine, WithRandomAutocomplete, Na
                 name = Templates.variableNames.random()
             }
         }
+
+        override fun clone(): BaseElement = this.copy()
 
         override fun toString(): String = buildString {
             // Константность

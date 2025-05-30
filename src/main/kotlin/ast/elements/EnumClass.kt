@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneElements
 import patterns.serializers.ElementSerializer
 import patterns.serializers.EnumClassSerializer
 import templates.Templates
@@ -38,7 +39,17 @@ data class EnumClass(
         }
     }
 
-    override fun getChildElements(): List<BaseElement> = elements
+    override fun getChildElements(): List<BaseElement> = elements.toList()
+
+    override fun delete(element: BaseElement) {
+        (element as? Declaration.EnumConstant)?.let {
+            elements.remove(it)
+        } ?: throw ClassCastException("enum delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = this.copy(
+        elements = elements.cloneElements()
+    ).apply { updateRelations() }
 
     override fun toStringArray(): List<String> = buildList {
         // Имя

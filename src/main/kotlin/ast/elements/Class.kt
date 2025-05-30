@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneElements
 import patterns.fullName
 import patterns.serializers.ClassSerializer
 import patterns.serializers.ElementSerializer
@@ -65,7 +66,22 @@ data class Class(
         }
     }
 
-    override fun getChildElements(): List<BaseElement> = (publicElements + protectedElements + privateElements) as List<BaseElement>
+    override fun getChildElements(): List<BaseElement> = (publicElements + protectedElements + privateElements).toList() as List<BaseElement>
+
+    override fun delete(element: BaseElement) {
+        (element as? ClassElement)?.let {
+            publicElements.remove(it)
+            protectedElements.remove(it)
+            privateElements.remove(it)
+        } ?: ClassCastException("class delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = this.copy(
+        parentClass = parentClass,
+        publicElements = publicElements.cloneElements(),
+        protectedElements = protectedElements.cloneElements(),
+        privateElements = privateElements.cloneElements()
+    ).apply { updateRelations() }
 
     override fun toStringArray(): List<String> = buildList {
         // Имя класса и его родителя

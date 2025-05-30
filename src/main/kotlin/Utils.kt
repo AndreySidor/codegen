@@ -51,3 +51,12 @@ fun parseStringList(jsonStr: String, fieldName: String): List<String> {
         .jsonArray
         .map { it.jsonPrimitive.content }
 }
+
+/**
+ * Выбор среднего элемента в списке
+ */
+fun<T> List<T>.selectMiddleElement(): T? {
+    if (this.isEmpty()) return null
+    val index = (this.size + 1) / 2 - 1
+    return this[index]
+}

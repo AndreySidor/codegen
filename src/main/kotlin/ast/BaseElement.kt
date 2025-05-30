@@ -2,7 +2,6 @@ package ast
 
 import ast.elements.GlobalArea
 import randomString
-import java.lang.IllegalArgumentException
 
 /**
  * Базовый самостоятельный элемент кода
@@ -33,4 +32,11 @@ abstract class BaseElement {
             }
             field = value ?: throw IllegalArgumentException("Parent cannot be set to null")
         }
+
+    /**
+     * Клонирование элемента
+     *
+     * ВКЛЮЧАЕТ ГЛУБОКОЕ КЛОНИРОВАНИЕ СО ВСЕМИ ВЛОЖЕННЫМИ ЭЛЕМЕНТАМИ, ЗА ИСКЛЮЧНИЕМ РОДИТЕЛЬСКОГО КЛАССА, ОН НЕ КЛОНИРУЕТСЯ
+     */
+    abstract fun clone() : BaseElement
 }

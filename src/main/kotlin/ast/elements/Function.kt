@@ -1,6 +1,8 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneElements
+import patterns.cloneWithCast
 import patterns.serializers.ElementSerializer
 import patterns.serializers.FunctionSerializer
 import templates.Templates
@@ -8,7 +10,7 @@ import templates.Type
 
 /**
  * Элемент функции / метода
- * @param isStatic является ли функия статической
+ * @param isStatic является ли функция статической
  * @param isDefinition есть ли у функции определение
  * @param returnType возвращаемый тип функции
  * @param name имя
@@ -43,6 +45,11 @@ data class Function(
         if (name.isEmpty()) {
             name = Templates.functionNames.random()
         }
+
+        // Тело (просто создаем body, если есть определение, но нет элементов)
+        if (isDefinition && body == null) {
+            body = Body()
+        }
     }
 
     override fun updateRelations() {
@@ -57,11 +64,26 @@ data class Function(
     }
 
     override fun getChildElements(): List<BaseElement> = buildList {
-        addAll(params)
+        addAll(params.toList())
         body?.let {
             add(it)
         }
     }
+
+    override fun delete(element: BaseElement) {
+        (element as? Declaration.Parameter)?.let {
+            params.remove(it)
+        } ?: (element as? Body)?.let {
+            if (it == body) {
+                (parent as BaseContainerElement).delete(this)
+            }
+        } ?: throw ClassCastException("function delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = this.copy(
+        params = params.cloneElements(),
+        body = body?.cloneWithCast()
+    ).apply { updateRelations() }
 
     override fun toStringArray(): List<String> = buildList {
         // Статичность, возвращаемый тип, имя, параметры и ;, если прототип
@@ -73,7 +95,7 @@ data class Function(
 
         // Определение, если есть
         if (isDefinition) {
-            body?.toStringArray()?.let { addAll(it) } ?: addAll(Body().toStringArray())
+            body?.toStringArray()?.let { addAll(it) }
             add(size - 1, "return ${Type.by(returnType).definition() ?: ""};")
         }
     }

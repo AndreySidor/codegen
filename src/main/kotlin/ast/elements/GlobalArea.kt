@@ -1,6 +1,7 @@
 package ast.elements
 
 import ast.*
+import patterns.cloneElements
 import patterns.serializers.ElementSerializer
 import patterns.serializers.GlobalAreaSerializer
 
@@ -27,7 +28,17 @@ data class GlobalArea(
         }
     }
 
-    override fun getChildElements(): List<BaseElement> = elements as List<BaseElement>
+    override fun getChildElements(): List<BaseElement> = elements.toList() as List<BaseElement>
+
+    override fun delete(element: BaseElement) {
+        (element as? SpaceElement)?.let {
+            elements.remove(it)
+        } ?: throw ClassCastException("GlobalArea delete: ${element::class}")
+    }
+
+    override fun clone(): BaseElement = GlobalArea(
+        elements = elements.cloneElements()
+    ).apply { updateRelations() }
 
     override fun toStringArray(): List<String> = buildList {
         // Элементы глобальной области
