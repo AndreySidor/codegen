@@ -6,6 +6,7 @@ import ast.NamedScope
 import ast.elements.*
 import ast.identifiers.UsageIdentifier
 import patterns.containingContainer
+import patterns.findAll
 import patterns.fullName
 import patterns.isNestedIn
 
@@ -25,8 +26,8 @@ object PrefixGenerator {
      * @return список [Prefix]
      */
     fun generate(root : GlobalArea) : List<Prefix> {
-        // Итоговый список префиксов, добавляем пустой префикс по умолчанию
-        val prefixes = mutableListOf<Prefix>(Prefix.Empty)
+        // Итоговый список префиксов
+        val prefixes = mutableListOf<Prefix>()
 
         val rootElements = root.getChildElements()
 
@@ -40,6 +41,11 @@ object PrefixGenerator {
                 identifier = id
                 // Выкидываем исключение, если UsageIdentifier не был найден
             } ?: throw IllegalArgumentException("generate: Usage identifier not found")
+        }
+
+        // Добавляем пустой префикс, если находим хоть 1 объявление в коде
+        if (root.findAll { it is Declaration }.isNotEmpty()) {
+            prefixes.add(Prefix.Empty)
         }
 
         // Если в коде есть глобальные переменные или enum в глобальной области видимости, то добавляем глобальный префикс
@@ -62,12 +68,44 @@ object PrefixGenerator {
 
             when (it) {
                 is Class -> {
-                    // Наличие статических переменных с открытым модификатором видимости, а также enum с элементами там же
-                    if (identifier!!.isNestedIn(container)
-                        && it.publicElements.count { publicElement ->
+                    // Идентификатор находится вне класса
+                    val isReachableContainer = identifier!!.isNestedIn(container)
+
+                    // Идентификатор находится внутри класса
+                    val isReachableClass = identifier!!.isNestedIn(it)
+
+                    // Видимость элементов класса, когда идентификатор располагается вне него
+                    val visibleItemsFromOutside = isReachableContainer && it.publicElements.count { publicElement ->
+                        (publicElement is Declaration.Variable && publicElement.isStatic)
+                                || (publicElement is EnumClass && publicElement.getChildElements().isNotEmpty())
+                    } > 0
+
+                    // Видимость элементов класса, когда идентификатор располагается внутри класса
+                    val visibleItemsFromInside = isReachableClass && it.getChildElements().count { elements ->
+                        (elements is Declaration.Variable && elements.isStatic)
+                                || (elements is EnumClass && elements.getChildElements().isNotEmpty())
+                    } > 0
+
+                    // Видимость элементов родительского класса, когда идентификатор располагается вне данного класса
+                    val visibleParentClassItemsFromOutside = it.parentClass?.let { parentClass ->
+                        isReachableContainer && parentClass.publicElements.count { publicElement ->
                             (publicElement is Declaration.Variable && publicElement.isStatic)
                                     || (publicElement is EnumClass && publicElement.getChildElements().isNotEmpty())
-                        } > 0) {
+                        } > 0
+                    } ?: false
+
+                    // Видимость элементов родительского класса, когда идентификатор располагается внутри данного класса
+                    val visibleParentClassItemsFromInside = it.parentClass?.let { parentClass ->
+                        isReachableClass && (parentClass.publicElements + parentClass.protectedElements).count { elements ->
+                            (elements is Declaration.Variable && elements.isStatic)
+                                    || (elements is EnumClass && elements.getChildElements().isNotEmpty())
+                        } > 0
+                    } ?: false
+
+                    if (visibleItemsFromOutside
+                        || visibleItemsFromInside
+                        || visibleParentClassItemsFromOutside
+                        || visibleParentClassItemsFromInside) {
 
                         // Создаем именованный префикс и добавляем :: в начало, если корневой элемент располагается в глобальной области видимости
                         prefixes.add(Prefix.Named("${
