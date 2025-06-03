@@ -167,14 +167,25 @@ object PrefixGenerator {
                     findUsageIdentifier = element
                     break
                 }
-
                 is NamedScope -> {
                     result.add(element)
                 }
             }
             if (element is BaseContainerElement) {
+                // Необходимо, так как идентификатор может располагаться внутри класса,
+                // а значит мы можем не захватить именованные области видимости внутри класса объявленные после места использования
+                if (element is Class) {
+                    val classNamedScopeElements = element.getChildElements().filterIsInstance<NamedScope>()
+                    result.addAll(classNamedScopeElements)
+                }
                 val (nestedScopes, foundInNested) = findNamedScopeBeforeUsageIdentifier(element)
-                result.addAll(nestedScopes)
+
+                // Проверяем, что элемента еще нет в списке, чтобы избежать дубликатов
+                nestedScopes.forEach {
+                    if (!result.contains(it)) {
+                        result.add(it)
+                    }
+                }
                 if (foundInNested != null) {
                     findUsageIdentifier = foundInNested
                     break
