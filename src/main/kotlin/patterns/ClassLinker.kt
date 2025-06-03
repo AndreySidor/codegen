@@ -57,9 +57,9 @@ object ClassLinker {
                 }
 
                 // Проверка, что родительский класс был найден
-                if (element.parentClass == null) {
-                    throw IllegalArgumentException("Parent class with identifier: ${parentId}, was not found")
-                }
+//                if (element.parentClass == null) {
+//                    throw IllegalArgumentException("Parent class with identifier: ${parentId}, was not found")
+//                }
             }
         }
     }
