@@ -40,6 +40,7 @@ import kotlin.random.Random
  * 11. enum_constant{name}
  * 12. parameter{isConst;type;name}
  * 13. body{()}
+ * 14. identifier{}
  *
  * Примечание по использованию шаблона:
  *
@@ -444,7 +445,8 @@ object PatternParser {
         VariableSerializer.key to VariableSerializer,
         EnumConstantSerializer.key to EnumConstantSerializer,
         ParameterSerializer.key to ParameterSerializer,
-        BodySerializer.key to BodySerializer
+        BodySerializer.key to BodySerializer,
+        IdentifierSerializer.key to IdentifierSerializer
     )
 
     /**
