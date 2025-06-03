@@ -60,3 +60,85 @@ fun<T> List<T>.selectMiddleElement(): T? {
     val index = (this.size + 1) / 2 - 1
     return this[index]
 }
+
+/**
+ * Читаем файл / файлы
+ * @param path путь к файлу / директории
+ * @param extensions список расширений файлов, которые нужно читать
+ */
+fun readFiles(path : String, extensions : List<String>) : List<String> {
+    try {
+        val input = File(path)
+        val result = mutableListOf<String>()
+
+        when {
+            input.isDirectory -> {
+                // Обходим директорию и поддиректории, ищем файлы и читаем их
+                input.walkTopDown().forEach {
+                    if (it.isFile && extensions.contains(it.extension)) {
+                        input.readText()
+                    }
+                }
+            }
+            input.isFile -> {
+                // Если файл обладает нужным расширением, то читаем его
+                if (extensions.contains(input.extension)) {
+                    result.add(input.readText())
+                }
+            }
+        }
+
+        return result
+    } catch (e : Exception) {
+        e.printStackTrace()
+        throw IllegalArgumentException("При чтении данных по пути: $path произошла ошибка, проверьте, что путь существует")
+    }
+}
+
+/**
+ * Запуск exe-файла
+ * @param exePath полный путь к exe-файлу
+ * @param args список аргументов
+ * @param workingDir рабочая директория
+ * @return boolean значение успеха и сообщение об ошибке
+ */
+fun runExe(
+    exePath: String,
+    args: List<String> = emptyList(),
+    workingDir: String? = null
+): Pair<Boolean, String> {
+    // Создаем команду
+    val command = mutableListOf(exePath)
+    command.addAll(args)
+
+    // Создаем процесс
+    val processBuilder = ProcessBuilder(command).apply {
+        workingDir?.let { directory(File(it)) }
+
+        // Объединяем stderr и stdout
+        redirectErrorStream(true)
+    }
+
+    return try {
+        // Запускаем процесс
+        val process = processBuilder.start()
+
+        // Читаем выход процесса
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+
+        // Смотрим код завершения процесса
+        val exitCode = process.waitFor()
+        Pair(exitCode == 0, output)
+    } catch (e: Exception) {
+        Pair(false, "Runtime error: ${e.message}")
+    }
+}
+
+/**
+ * Печать исключения через System.err с разделителями
+ */
+fun Exception.printError() {
+    System.err.println("/".repeat(20))
+    System.err.println("Error: $message\nStack trace:\n${stackTrace.joinToString("\n")}")
+    System.err.println("/".repeat(20))
+}
