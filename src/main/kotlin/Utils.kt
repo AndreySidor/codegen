@@ -142,3 +142,55 @@ fun Exception.printError() {
     System.err.println("Error: $message\nStack trace:\n${stackTrace.joinToString("\n")}")
     System.err.println("/".repeat(20))
 }
+
+/**
+ * Получить файлы
+ * @param path путь к файлу / директории
+ * @param extensions расширения файлов (обязательно)
+ */
+fun getFiles(path : String, extensions : List<String>) : List<File> {
+    try {
+        val inputFile = File(path)
+        val result = mutableListOf<File>()
+        when {
+            inputFile.isFile -> {
+                // Если файл обладает нужным расширением, то возвращаем его
+                if (extensions.contains(inputFile.extension)) {
+                    result.add(inputFile)
+                }
+            }
+            inputFile.isDirectory -> {
+                // Обходим директорию и поддиректории, ищем файлы и возвращаем их
+                inputFile.walkTopDown().forEach {
+                    if (it.isFile && extensions.contains(it.extension)) {
+                        result.add(it)
+                    }
+                }
+            }
+        }
+        return result
+    } catch (e : Exception) {
+        e.printStackTrace()
+        throw IllegalArgumentException("При чтении данных по пути: $path произошла ошибка, проверьте, что путь существует")
+    }
+}
+
+/**
+ * Json с настройками
+ */
+val json = Json {
+    // Форматирует JSON с отступами и переносами строк для читаемости
+    // Пример:
+    // {
+    //   "key": "value"
+    // }
+    // вместо {"key":"value"}
+    prettyPrint = true
+
+    // Игнорирует неизвестные ключи при десериализации
+    ignoreUnknownKeys = true
+
+    // Сериализует все свойства, даже если они имеют значения по умолчанию
+    // Если false - свойства со значениями по умолчанию будут пропускаться
+    encodeDefaults = true
+}
