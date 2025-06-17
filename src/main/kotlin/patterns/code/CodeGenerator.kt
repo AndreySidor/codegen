@@ -1,11 +1,11 @@
 package patterns.code
 
 import ast.BaseContainerElement
+import ast.BaseElement
 import ast.NamedElement
 import ast.elements.*
 import ast.elements.Function
-import patterns.cloneElements
-import patterns.destroy
+import patterns.*
 import templates.Templates
 
 object CodeGenerator {
@@ -50,17 +50,46 @@ object CodeGenerator {
             enums = enums.cloneElements(),
             functions = functions.cloneElements(),
             globalVariables = globalVariables.cloneElements()
+        ).generate() + PatternFull(
+            global = root.cloneWithCast()
         ).generate()
 
         return results.map {
             it.filterDeclarationsCount()
             it.repairSameName()
+            it.deleteLongDefinitions()
+            it.removeEmptyNamedScopes()
             it.updateRelations()
             it
-        }
+        }.filter { it.toStringArray().count() <= 60 }
     }
 
     private fun BaseContainerElement.filterDeclarationsCount() {
+        fun List<BaseElement>.filterVariables() {
+            var counterStatic = 0
+            var counterNotStatic = 0
+            for (i in 0..<this.count()) {
+                if (this[i] is Declaration.Variable) {
+                    if ((this[i] as Declaration.Variable).isStatic) {
+                        counterStatic++
+                        counterNotStatic = 0
+                        if (counterStatic > 2) {
+                            this[i].destroy()
+                        }
+                    } else {
+                        counterNotStatic++
+                        counterStatic = 0
+                        if (counterNotStatic > 2) {
+                            this[i].destroy()
+                        }
+                    }
+                } else {
+                    counterStatic = 0
+                    counterNotStatic = 0
+                }
+            }
+        }
+
         when (this) {
             is EnumClass -> {
                 val elements = getChildElements()
@@ -79,19 +108,13 @@ object CodeGenerator {
                 }
                 body?.filterDeclarationsCount()
             }
-            !is Class -> {
-                var counter = 0
-                val elements = getChildElements()
-                for (i in 0..<elements.count()) {
-                    if (elements[i] is Declaration.Variable && !(elements[i] as Declaration.Variable).isStatic) {
-                        counter++
-                        if (counter > 2) {
-                            elements[i].destroy()
-                        }
-                    } else {
-                        counter = 0
-                    }
-                }
+            is Class -> {
+                publicElements.filterIsInstance<BaseElement>().filterVariables()
+                protectedElements.filterIsInstance<BaseElement>().filterVariables()
+                privateElements.filterIsInstance<BaseElement>().filterVariables()
+            }
+            else -> {
+                getChildElements().filterVariables()
                 getChildElements().forEach {
                     (it as? BaseContainerElement)?.filterDeclarationsCount()
                 }
@@ -100,19 +123,19 @@ object CodeGenerator {
     }
 
     private fun BaseContainerElement.repairSameName() {
-        // 1. Собираем все объявления в текущем контейнере
+        // Собираем все объявления в текущем контейнере
         val declarations = getChildElements()
             .filterIsInstance<Declaration>()
             .filter { it is NamedElement } as List<NamedElement>
 
-        // 2. Находим дубликаты имен
+        // Находим дубликаты имен
         val nameCounts = declarations.groupingBy { it.name }.eachCount()
         val duplicates = nameCounts.filter { it.value > 1 }.keys
 
-        // 3. Подготавливаем список для переименования
+        // Подготавливаем список для переименования
         val needRename = declarations.filter { it.name in duplicates }.toMutableList()
 
-        // 4. Переименовываем дубликаты
+        // Переименовываем дубликаты
         needRename.forEach { declaration ->
             when (declaration) {
                 is Declaration.EnumConstant -> declaration.name = Templates.enumConstantNames.random()
@@ -120,9 +143,28 @@ object CodeGenerator {
             }
         }
 
-        // 5. Рекурсивно обрабатываем вложенные контейнеры
+        // Рекурсивно обрабатываем вложенные контейнеры
         getChildElements()
             .filterIsInstance<BaseContainerElement>()
             .forEach { it.repairSameName() }
+    }
+
+    private fun BaseContainerElement.deleteLongDefinitions() {
+        val variables = findAll { it is Declaration.Variable }.filterIsInstance<Declaration.Variable>()
+
+        for (variable in variables) {
+            if (variable.definition != null && variable.definition!!.count() > 15) {
+                variable.isDefinition = false
+                variable.definition = null
+            }
+        }
+    }
+
+    private fun BaseContainerElement.removeEmptyNamedScopes() {
+        this.deleteAll {
+            (it is Class && it.getChildElements().isEmpty())
+                    || (it is Namespace && it.getChildElements().isEmpty())
+                    || (it is EnumClass && it.getChildElements().isEmpty())
+        }
     }
 }
