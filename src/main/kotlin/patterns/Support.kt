@@ -171,6 +171,31 @@ fun BaseElement.findInParents(
 }
 
 /**
+ * Найти элементы по связи parent
+ * @param to до какого элемента осуществляется поиск
+ * @param condition условие для отбора элементов
+ */
+fun BaseElement.findByParents(
+    to : BaseElement? = null,
+    condition : ((BaseElement) -> Boolean)
+) : List<BaseElement> {
+    val result = mutableListOf<BaseElement>()
+    var currentParent = parent
+
+    // Осуществляем поиск, пока родитель существует и не является to
+    while (currentParent != null && currentParent != to) {
+
+        // Если элемент удовлетворяет условию поиска, то добавляем его
+        if (condition.invoke(currentParent)) {
+            result.add(currentParent)
+        }
+
+        currentParent = currentParent.parent
+    }
+    return result
+}
+
+/**
  * Функция удаления элемента из дерева, элемент удаляет себя из родительского контейнера, путем применения метода delete
  */
 fun BaseElement.destroy() {
