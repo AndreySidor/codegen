@@ -135,6 +135,52 @@ fun BaseContainerElement.findAll(
 }
 
 /**
+ * Для каждого элемента
+ * @param before до какого элемента осуществлять перебор
+ * @param reverse перебор в обратном порядке, перебор осуществляется по getChildElements()
+ * @param block действие для элемента перебора
+ */
+fun BaseContainerElement.forEach(
+    before: BaseElement? = null,
+    reverse: Boolean = false,
+    block: (BaseElement) -> Unit
+) {
+    // Нужна для отслеживания before в рекурсии, чтобы в основной функции не добавлять не нужный параметр в возвращаемом значении
+    fun BaseContainerElement.innerForEach(
+        before : BaseElement? = null,
+        reverse : Boolean = false,
+        block: (BaseElement) -> Unit
+    ) : Boolean {
+        var isBeforeFind = false
+        for (it in if (reverse) getChildElements().reversed() else getChildElements()) {
+
+            // Если найден элемент до которого осуществляем перебор, то прерываем цикл
+            if (before != null && it == before) {
+                isBeforeFind = true
+                break
+            }
+
+            // Действие с элементом
+            block.invoke(it)
+
+            // Для каждого дочернего элемента
+            if (it is BaseContainerElement) {
+                val nestedResults = it.innerForEach(before, reverse, block)
+
+                // Если во вложенном переборе встретили before, прекращаем перебор
+                if (nestedResults) {
+                    isBeforeFind = true
+                    break
+                }
+            }
+        }
+        return isBeforeFind
+    }
+
+    innerForEach(before, reverse, block)
+}
+
+/**
  * Поиск элементов в родителях
  * @param to до какого элемента осуществляем поиск
  * @param condition условие нахождения элемента
