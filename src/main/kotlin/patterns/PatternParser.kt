@@ -72,9 +72,10 @@ object PatternParser {
      * Основная функция для парсинга шаблона
      * @param pattern шаблон
      * @param difficult сложность, которую необходимо соблюдать
+     * @param onlySpecificDifficult если true, то возвращаем элемент только определенной сложности, если false, то как обычно
      * @return элемент AST [BaseElement]
      */
-    private fun parse(pattern : String, difficult: Difficult?) : BaseElement? {
+    private fun parse(pattern : String, difficult: Difficult?, onlySpecificDifficult : Boolean = false) : BaseElement? {
         // Начальное состояние обработки KEY
         val state = mutableListOf(ParserStates.KEY)
 
@@ -169,8 +170,9 @@ object PatternParser {
             return when {
                 currentDifficult == null || difficult == null ->
                     if (isRandom && !Random.nextBoolean()) null else parseElement(key, params, difficult)
-                difficult == Difficult.EASY && currentDifficult != Difficult.EASY -> null
-                difficult == Difficult.MEDIUM && currentDifficult == Difficult.HARD -> null
+                !onlySpecificDifficult && difficult == Difficult.EASY && currentDifficult != Difficult.EASY -> null
+                !onlySpecificDifficult && difficult == Difficult.MEDIUM && currentDifficult == Difficult.HARD -> null
+                onlySpecificDifficult && difficult != currentDifficult -> null
                 else -> parseElement(key, params, difficult)
             }
         }
@@ -396,7 +398,7 @@ object PatternParser {
     private fun<T> parseOneOfMany(many : List<String>, difficult: Difficult?) : T {
         val result = mutableListOf<T>()
         many.forEach {
-            parse(it, difficult)?.let { element ->
+            parse(it, difficult, true)?.let { element ->
                 (element as? T)?.let(result::add)
                     ?: throw IllegalArgumentException("parseOneOfMany: invalid element type")
             }
